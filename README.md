@@ -27,28 +27,15 @@ A mini Ride Sharing backend built with Spring Boot and MongoDB.
 
 ## API Endpoints
 
-### Authentication
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/register` | Register a new user/driver |
-| POST | `/api/auth/login` | Login and get JWT token |
-
-### User (Passenger)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/v1/rides` | Request a new ride |
-| GET | `/api/v1/user/rides` | View my ride history |
-
-### Driver
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/v1/driver/rides/requests` | View pending ride requests |
-| POST | `/api/v1/driver/rides/{id}/accept` | Accept a ride |
-
-### Common
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/v1/rides/{id}/complete` | Complete a ride (Driver/User) |
+| Role | Endpoint | Action |
+| :--- | :--- | :--- |
+| **PUBLIC** | `/api/auth/register` | Create User |
+| **PUBLIC** | `/api/auth/login` | Return JWT |
+| **USER** | `/api/v1/rides` | Create Ride |
+| **USER** | `/api/v1/user/rides` | View My Rides |
+| **DRIVER** | `/api/v1/driver/rides/requests` | View All Pending |
+| **DRIVER** | `/api/v1/driver/rides/{id}/accept` | Accept Ride |
+| **USER/DRIVER** | `/api/v1/rides/{id}/complete` | Complete Ride |
 
 ## Testing
 Use the provided `test_api.sh` script to test the flow:
