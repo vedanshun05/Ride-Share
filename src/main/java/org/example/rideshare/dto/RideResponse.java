@@ -18,12 +18,15 @@ public class RideResponse {
 
     public RideResponse(Ride ride) {
         this.id = ride.getId();
-        this.userId = ride.getUserId();
-        this.driverId = ride.getDriverId();
+        this.userId = ride.getPassengerUsername();
+        this.driverId = ride.getDriverUsername();
         this.pickupLocation = ride.getPickupLocation();
         this.dropLocation = ride.getDropLocation();
         this.status = ride.getStatus();
-        this.createdAt = ride.getCreatedAt();
+        if (ride.getCreatedAt() != null) {
+            this.createdAt = java.util.Date
+                    .from(ride.getCreatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant());
+        }
     }
 
     public RideResponse(String id, String userId, String driverId, String pickupLocation, String dropLocation,

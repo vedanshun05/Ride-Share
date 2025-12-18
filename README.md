@@ -1,45 +1,56 @@
 # RideShare Backend
 
-A mini Ride Sharing backend built with Spring Boot and MongoDB.
+This is a mini Ride Sharing backend built with Spring Boot and MongoDB.
 
 ## Features
-- **User Registration & Login** (JWT Authentication)
-- **Ride Management**: Users can request rides and view their history.
-- **Driver Operations**: Drivers can view pending requests and accept/complete rides.
-- **Security**: Role-based access control (ROLE_USER, ROLE_DRIVER).
-- **Validation**: Input validation using Jakarta Validation.
-- **Exception Handling**: Global exception handling with structured error responses.
+- JWT Authentication (User/Driver)
+- Ride Management (Request, Accept, Complete)
+- Driver & User Analytics
+- Advanced Search & Filtering
 
-## Tech Stack
-- Java 17
-- Spring Boot 3.2.1
-- Spring Data MongoDB
-- Spring Security (JWT)
-- Lombok
+## Setup
+1. Ensure MongoDB is running on default port 27017.
+2. Run the application: `mvn spring-boot:run`
 
-## Setup & Run
-1. Ensure MongoDB is running locally on port 27017.
-2. Run the application:
-   ```bash
-   mvn spring-boot:run
-   ```
-3. The server will start on port `8081`.
+## API Documentation
+The application uses Swagger/OpenAPI for API documentation.
+- **Swagger UI**: [http://localhost:8081/swagger-ui.html](http://localhost:8081/swagger-ui.html)
+- **OpenAPI JSON**: [http://localhost:8081/api-docs](http://localhost:8081/api-docs)
 
 ## API Endpoints
 
-| Role | Endpoint | Action |
-| :--- | :--- | :--- |
-| **PUBLIC** | `/api/auth/register` | Create User |
-| **PUBLIC** | `/api/auth/login` | Return JWT |
-| **USER** | `/api/v1/rides` | Create Ride |
-| **USER** | `/api/v1/user/rides` | View My Rides |
-| **DRIVER** | `/api/v1/driver/rides/requests` | View All Pending |
-| **DRIVER** | `/api/v1/driver/rides/{id}/accept` | Accept Ride |
-| **USER/DRIVER** | `/api/v1/rides/{id}/complete` | Complete Ride |
+### Authentication
+- `POST /api/auth/register` - Register a new user/driver
+  - Body: `{"username": "...", "password": "...", "role": "ROLE_USER"}`
+- `POST /api/auth/login` - Login to get JWT
+  - Body: `{"username": "...", "password": "..."}`
 
-## Testing
-Use the provided `test_api.sh` script to test the flow:
-```bash
-chmod +x test_api.sh
-./test_api.sh
-```
+### Rides (User)
+- `POST /api/v1/rides` - Create a ride request
+  - Body: `{"pickupLocation": "...", "dropLocation": "..."}`
+  - Header: `Authorization: Bearer <token>`
+- `GET /api/v1/rides/user/{username}` - View my rides
+- `GET /api/v1/rides/advanced-search` - Search rides with filters
+
+### Rides (Driver)
+- `GET /api/v1/driver/rides/requests` - View pending requests
+- `POST /api/v1/driver/rides/{id}/accept` - Accept a ride
+- `POST /api/v1/rides/complete/{id}` - Complete a ride
+- `GET /api/v1/driver/{driverId}/active-rides` - View active rides
+
+### Analytics
+- `GET /api/v1/analytics/rides-per-day`
+- `GET /api/v1/analytics/driver/{driverId}/summary`
+- `GET /api/v1/analytics/driver/{driverId}/earnings`
+- `GET /api/v1/analytics/user/{userId}/spending`
+- `GET /api/v1/analytics/status-summary`
+
+## Advanced Query APIs
+See `RideController` for full list including:
+- `/api/v1/rides/search?text=...` (Pickup/Drop search)
+- `/api/v1/rides/filter-distance?min=...&max=...`
+- `/api/v1/rides/filter-date-range?start=...&end=...`
+- `/api/v1/rides/sort?order=desc`
+
+## Folder Structure
+Follows the standard Spring Boot structure with `controller`, `service`, `repository`, `model`, `dto`, `exception`, `config` packages.

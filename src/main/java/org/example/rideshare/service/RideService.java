@@ -1,88 +1,129 @@
 package org.example.rideshare.service;
 
-import org.example.rideshare.dto.CreateRideRequest;
-import org.example.rideshare.dto.RideResponse;
 import org.example.rideshare.model.Ride;
-import org.example.rideshare.model.User;
 import org.example.rideshare.repository.RideRepository;
-import org.example.rideshare.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class RideService {
 
-    @Autowired
-    private RideRepository rideRepository;
+    private final RideRepository repo;
+    private final MongoTemplate template;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    private User getAuthenticatedUser() {
-        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    public RideService(RideRepository repo, MongoTemplate template) {
+        this.repo = repo;
+        this.template = template;
     }
 
-    public RideResponse createRide(CreateRideRequest request) {
-        User user = getAuthenticatedUser();
-
-        Ride ride = new Ride();
-        ride.setUserId(user.getId());
-        ride.setPickupLocation(request.getPickupLocation());
-        ride.setDropLocation(request.getDropLocation());
+    public Ride createRide(String passenger, Ride ride) {
+        ride.setPassengerUsername(passenger);
         ride.setStatus("REQUESTED");
-
-        Ride savedRide = rideRepository.save(ride);
-        return new RideResponse(savedRide);
+        return repo.save(ride);
     }
 
-    public List<RideResponse> getMyRides() {
-        User user = getAuthenticatedUser();
-        return rideRepository.findByUserId(user.getId()).stream()
-                .map(RideResponse::new)
-                .collect(Collectors.toList());
+    @Transactional
+    public Ride acceptRide(String id, String driver) {
+        Ride r = repo.findById(id).orElseThrow();
+        r.setDriverUsername(driver);
+        r.setStatus("ACCEPTED");
+        return repo.save(r);
     }
 
-    public List<RideResponse> getAvailableRides() {
-        return rideRepository.findByStatus("REQUESTED").stream()
-                .map(RideResponse::new)
-                .collect(Collectors.toList());
+    public Ride completeRide(String id) {
+        Ride r = repo.findById(id).orElseThrow();
+        r.setStatus("COMPLETED");
+        return repo.save(r);
     }
 
-    public RideResponse acceptRide(String rideId) {
-        User driver = getAuthenticatedUser();
-        if (!"ROLE_DRIVER".equals(driver.getRole())) {
-            throw new RuntimeException("Only drivers can accept rides");
+    public List<Ride> searchRides(String text) {
+        Query query = new Query();
+        query.addCriteria(new Criteria().orOperator(
+                Criteria.where("pickupLocation").regex(text, "i"),
+                Criteria.where("dropLocation").regex(text, "i")));
+        return template.find(query, Ride.class);
+    }
+
+    public List<Ride> filterByDistance(Double min, Double max) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("distanceKm").gte(min).lte(max));
+        return template.find(query, Ride.class);
+    }
+
+    public List<Ride> filterByDateRange(LocalDate start, LocalDate end) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("createdAt").gte(start.atStartOfDay()).lte(end.atTime(23, 59, 59)));
+        return template.find(query, Ride.class);
+    }
+
+    public List<Ride> sortByFare(String order) {
+        Query query = new Query();
+        query.with(Sort.by(order.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC, "fare"));
+        return template.find(query, Ride.class);
+    }
+
+    public List<Ride> getRidesByUser(String userId) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("passengerUsername").is(userId));
+        return template.find(query, Ride.class);
+    }
+
+    public List<Ride> getRidesByUserAndStatus(String userId, String status) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("passengerUsername").is(userId).and("status").is(status));
+        return template.find(query, Ride.class);
+    }
+
+    public List<Ride> getDriverActiveRides(String driverId) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("driverUsername").is(driverId).and("status").is("ACCEPTED"));
+        return template.find(query, Ride.class);
+    }
+
+    public List<Ride> filterByStatusAndKeyword(String status, String text) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("status").is(status)
+                .orOperator(
+                        Criteria.where("pickupLocation").regex(text, "i"),
+                        Criteria.where("dropLocation").regex(text, "i")));
+        return template.find(query, Ride.class);
+    }
+
+    public List<Ride> advancedSearch(String text, String status, String sort, String order, int page, int size) {
+        Query query = new Query();
+        if (text != null && !text.isEmpty()) {
+            query.addCriteria(new Criteria().orOperator(
+                    Criteria.where("pickupLocation").regex(text, "i"),
+                    Criteria.where("dropLocation").regex(text, "i")));
         }
-
-        Ride ride = rideRepository.findById(rideId)
-                .orElseThrow(() -> new RuntimeException("Ride not found"));
-
-        if (!"REQUESTED".equals(ride.getStatus())) {
-            throw new RuntimeException("Ride is not available");
+        if (status != null && !status.isEmpty()) {
+            query.addCriteria(Criteria.where("status").is(status));
         }
-
-        ride.setDriverId(driver.getId());
-        ride.setStatus("ACCEPTED");
-
-        return new RideResponse(rideRepository.save(ride));
+        if (sort != null && !sort.isEmpty()) {
+            query.with(Sort.by(order.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC, sort));
+        }
+        query.with(PageRequest.of(page, size));
+        return template.find(query, Ride.class);
     }
 
-    public RideResponse completeRide(String rideId) {
-        Ride ride = rideRepository.findById(rideId)
-                .orElseThrow(() -> new RuntimeException("Ride not found"));
+    public List<Ride> getRidesByDate(LocalDate date) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("createdAt").gte(date.atStartOfDay()).lte(date.atTime(23, 59, 59)));
+        return template.find(query, Ride.class);
+    }
 
-        if (!"ACCEPTED".equals(ride.getStatus())) {
-            throw new RuntimeException("Ride cannot be completed unless accepted");
-        }
-
-        ride.setStatus("COMPLETED");
-        return new RideResponse(rideRepository.save(ride));
+    public List<Ride> getPendingRides() {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("status").is("REQUESTED"));
+        return template.find(query, Ride.class);
     }
 }
