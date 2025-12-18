@@ -3,31 +3,24 @@ package org.example.rideshare.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.Date;
-
 @Document(collection = "rides")
 public class Ride {
     @Id
     private String id;
-    private String userId;
-    private String driverId;
+
+    private String passengerUsername;
+    private String driverUsername;
+
     private String pickupLocation;
     private String dropLocation;
+
+    private Double fare;
+    private Double distanceKm;
     private String status; // REQUESTED, ACCEPTED, COMPLETED
-    private Date createdAt = new Date();
+    private java.time.LocalDateTime createdAt;
 
     public Ride() {
-    }
-
-    public Ride(String id, String userId, String driverId, String pickupLocation, String dropLocation, String status,
-            Date createdAt) {
-        this.id = id;
-        this.userId = userId;
-        this.driverId = driverId;
-        this.pickupLocation = pickupLocation;
-        this.dropLocation = dropLocation;
-        this.status = status;
-        this.createdAt = createdAt;
+        this.createdAt = java.time.LocalDateTime.now();
     }
 
     public String getId() {
@@ -38,20 +31,20 @@ public class Ride {
         this.id = id;
     }
 
-    public String getUserId() {
-        return userId;
+    public String getPassengerUsername() {
+        return passengerUsername;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public void setPassengerUsername(String passengerUsername) {
+        this.passengerUsername = passengerUsername;
     }
 
-    public String getDriverId() {
-        return driverId;
+    public String getDriverUsername() {
+        return driverUsername;
     }
 
-    public void setDriverId(String driverId) {
-        this.driverId = driverId;
+    public void setDriverUsername(String driverUsername) {
+        this.driverUsername = driverUsername;
     }
 
     public String getPickupLocation() {
@@ -70,6 +63,14 @@ public class Ride {
         this.dropLocation = dropLocation;
     }
 
+    public Double getFare() {
+        return fare;
+    }
+
+    public void setFare(Double fare) {
+        this.fare = fare;
+    }
+
     public String getStatus() {
         return status;
     }
@@ -78,11 +79,19 @@ public class Ride {
         this.status = status;
     }
 
-    public Date getCreatedAt() {
+    public java.time.LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(Date createdAt) {
+    public void setCreatedAt(java.time.LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Double getDistanceKm() {
+        return distanceKm;
+    }
+
+    public void setDistanceKm(Double distanceKm) {
+        this.distanceKm = distanceKm;
     }
 }

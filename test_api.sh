@@ -44,5 +44,9 @@ curl -s -X POST $BASE_URL/v1/rides/$RIDE_ID/complete \
 -H "Authorization: Bearer $DRIVER_TOKEN" | jq .
 
 echo -e "\n\n9. Viewing My Rides (User)..."
-curl -s -X GET $BASE_URL/v1/user/rides \
+curl -s -X GET $BASE_URL/v1/rides/user/john \
 -H "Authorization: Bearer $USER_TOKEN" | jq .
+
+echo -e "\n\n10. Checking API Documentation..."
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/api-docs
+echo " (Should be 200)"

@@ -2,6 +2,11 @@
 
 Follow these steps inside the **HTTPie Desktop Application**.
 
+## 0. View API Documentation
+*   **Method**: `GET`
+*   **URL**: `http://localhost:8081/api-docs`
+*   **Action**: Click **Send**. You should see the OpenAPI JSON definition.
+
 ## 1. Register User
 *   **Method**: `POST`
 *   **URL**: `http://localhost:8081/api/auth/register`
@@ -99,7 +104,7 @@ Follow these steps inside the **HTTPie Desktop Application**.
 
 ## 9. View My Rides (User)
 *   **Method**: `GET`
-*   **URL**: `http://localhost:8081/api/v1/user/rides`
+*   **URL**: `http://localhost:8081/api/v1/rides/user/gui_user`
 *   **Auth**:
     *   Click **Auth** tab -> **Bearer Token**.
     *   Paste the **User Token**.

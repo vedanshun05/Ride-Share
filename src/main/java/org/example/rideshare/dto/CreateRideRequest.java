@@ -1,21 +1,14 @@
 package org.example.rideshare.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 public class CreateRideRequest {
-    @NotBlank(message = "Pickup location is required")
+    @NotBlank(message = "Pickup is required")
     private String pickupLocation;
 
-    @NotBlank(message = "Drop location is required")
+    @NotBlank(message = "Drop is required")
     private String dropLocation;
-
-    public CreateRideRequest() {
-    }
-
-    public CreateRideRequest(String pickupLocation, String dropLocation) {
-        this.pickupLocation = pickupLocation;
-        this.dropLocation = dropLocation;
-    }
 
     public String getPickupLocation() {
         return pickupLocation;

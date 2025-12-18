@@ -7,15 +7,16 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class User {
     @Id
     private String id;
+
+    @org.springframework.data.mongodb.core.index.Indexed(unique = true)
     private String username;
     private String password;
-    private String role; // ROLE_USER or ROLE_DRIVER
+    private String role; // ROLE_DRIVER, ROLE_USER
 
     public User() {
     }
 
-    public User(String id, String username, String password, String role) {
-        this.id = id;
+    public User(String username, String password, String role) {
         this.username = username;
         this.password = password;
         this.role = role;
